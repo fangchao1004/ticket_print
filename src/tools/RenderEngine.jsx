@@ -18,12 +18,10 @@ export function RenderEngine({ jsonlist, page, scaleNum = 1, bgscalNum = 1 }) {
             case 'textarea':
                 return <textarea key={index} {...item.attribute} />
             case 'daterange':
-                if (!item.attribute.value) return null
-                return <input key={index} {...item.attribute} style={{ ...item.attribute.style, height: 24, borderStyle: 'none', borderBottomStyle: 'solid', borderBottomWidth: 2, borderBlockColor: '#555555', backgroundColor: '#ffffff' }} value={item.attribute.value ? '从  ' + moment(item.attribute.value[0]).format('YYYY年MM月DD日 HH时mm分') + '  至  ' + moment(item.attribute.value[1]).format('YYYY年MM月DD日 HH时mm分') : ''} />
             case 'daterange1':
                 if (!item.attribute.value) return null
-                return <input key={index} {...item.attribute} style={{ ...item.attribute.style, borderStyle: 'none', backgroundColor: '#ffffff', height: 18, top: item.attribute.style.top + 3 }} value={item.attribute.value ? moment(item.attribute.value).format('YYYY年MM月DD日 HH时mm分') : ''} />
-            case 'datepicker':
+                return <input key={index} {...item.attribute} style={{ ...item.attribute.style, height: 24, borderStyle: 'none', borderBottomStyle: 'solid', borderBottomWidth: 2, borderBlockColor: '#555555', backgroundColor: '#ffffff' }} value={item.attribute.value ? '从  ' + moment(item.attribute.value[0]).format('YYYY年MM月DD日 HH时mm分') + '  至  ' + moment(item.attribute.value[1]).format('YYYY年MM月DD日 HH时mm分') : ''} />
+           case 'datepicker':
                 if (!item.attribute.value) return null
                 return <input key={index} {...item.attribute} style={{ ...item.attribute.style, borderStyle: 'none', borderBottomStyle: 'solid', borderBottomWidth: 2, borderBlockColor: '#555555', backgroundColor: '#ffffff', height: 18, top: item.attribute.style.top + 3 }} value={item.attribute.value ? moment(item.attribute.value).format('YYYY年MM月DD日 HH时mm分') : ''} />
             case 'datepicker1':

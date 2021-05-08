@@ -112,7 +112,7 @@ export default function TestPageNew() {
         return (
           <div style={ticketValue.scal ? {} : { width: 840 * scale_value, height: 1188 * scale_value }}>
             <div style={{ transform: `scale(${scale_value})` }}>
-              <RenderEngine jsonlist={ticketValue} page={index} scaleNum={scalObj.scaleNum || 1} bgscalNum={scalObj.bgscalNum || 1} />
+              <RenderEngine jsonlist={ticketValue} page={index} scaleNum={scalObj.scaleNum || 1} bgscaleNum={scalObj.bgscaleNum || 1} />
             </div>
           </div>
         )

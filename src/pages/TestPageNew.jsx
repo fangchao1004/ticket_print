@@ -21,7 +21,8 @@ export default function TestPageNew() {
     })
     return pagelist
   }, [])
-  const init = useCallback(async id => {
+  const init = useCallback(async (id, print_num, print_card) => {
+    console.log('initinitinit id, print_num, print_card:', id, print_num, print_card)
     let user_list = await HttpApi.getAllUserlist()
     if (user_list.length > 0) {
       userList = user_list
@@ -56,16 +57,14 @@ export default function TestPageNew() {
                 let message = {
                   content: 'print',
                   landscape: false,
-                  copies: newTicketValue.print_num || 1,
+                  copies: print_num || newTicketValue.print_num,
                   pageSize: 'A4'
                 }
-
                 if (newTicketValue.pages.length > 1) {
                   message.landscape = true
-                  message.copies = newTicketValue.print_num || 1
+                  message.copies = print_num || newTicketValue.print_num
                   message.pageSize = 'A4'
                 }
-
                 if (window.electron) window.electron.ipcRenderer.send('message', message)
               }, 1500)
             } else {
@@ -85,16 +84,14 @@ export default function TestPageNew() {
         let message = {
           content: 'print',
           landscape: false,
-          copies: ticketValue.print_num || 1,
+          copies: print_num || ticketValue.print_num,
           pageSize: 'A4'
         }
-
         if (ticketValue.pages.length > 1) {
           message.landscape = true
-          message.copies = ticketValue.print_num || 1
+          message.copies = print_num || ticketValue.print_num
           message.pageSize = 'A4'
         }
-
         if (window.electron) window.electron.ipcRenderer.send('message', message)
       }, 1500)
     }
@@ -125,11 +122,15 @@ export default function TestPageNew() {
     const query = window.location.search.substring(1)
     const params = query.split('&')
     let id = null
+    let print_num = 1;
+    let print_card = true;
     for (var i = 0; i < params.length; i++) {
       const param = params[i].split('=')
       if (param[0] === 'id') id = param[1]
+      if (param[0] === 'print_num') print_num = param[1]
+      if (param[0] === 'print_card') print_card = param[1]
     }
-    if (id) init(id)
+    if (id) init(id, print_num, print_card)///获取壳发来的参数
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return <div style={{ ...styles.root, marginTop: ticketValue.scal ? 0 : -40 }}>{getRenderViewByList()}</div>

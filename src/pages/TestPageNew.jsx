@@ -22,7 +22,8 @@ export default function TestPageNew() {
     return pagelist
   }, [])
   const init = useCallback(async (id, print_num, print_card) => {
-    console.log('initinitinit id, print_num, print_card:', id, print_num, print_card)
+    console.log('init参数 id, print_num, print_card:', id, print_num, print_card)
+    print_num = parseInt(print_num)
     let user_list = await HttpApi.getAllUserlist()
     if (user_list.length > 0) {
       userList = user_list
@@ -31,10 +32,16 @@ export default function TestPageNew() {
     if (res) {
       res.pages = JSON.parse(res.pages)
       res.pages = removeAllDisabled(res.pages)
+      if (res.checkcard) {
+        try {
+          res.checkcard = JSON.parse(res.checkcard)
+        } catch (error) {
+          console.log('检查卡json格式有问题')
+        }
+      }
       let mainPages = []
       let mainPage = []
       let extraPages = []
-
       res.pages.forEach(page => {
         if (page.is_extra) {
           extraPages.push([page])
@@ -42,10 +49,15 @@ export default function TestPageNew() {
           mainPage.push(page)
         }
       })
-
       mainPages.push(mainPage)
       allPages = mainPages.concat(extraPages)
-
+      if (String(print_card) === 'true' && res.checkcard && res.checkcard.length > 0) { ///是否打印检查卡
+        res.checkcard.forEach((item_card) => {
+          item_card.index = item_card.index
+          allPages.push([item_card])
+        })
+      }
+      // return;
       if (window.electron) {
         window.electron.ipcRenderer.on('message', (_, arg) => {
           if (arg === 'printSuccess') {
@@ -78,7 +90,6 @@ export default function TestPageNew() {
 
       let ticketValue = { ...res }
       ticketValue.pages = allPages.shift()
-
       setTicketValue(ticketValue)
       setTimeout(() => {
         let message = {

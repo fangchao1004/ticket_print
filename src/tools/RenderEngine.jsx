@@ -39,16 +39,13 @@ export function RenderEngine({ jsonlist, page, scaleNum = 1, bgscaleNum = 1 }) {
                 return null
         }
     }, [])
-
     const init = useCallback(async () => {
         setList(jsonlist)
         setCurentPageIndex(page)
     }, [jsonlist, page])
-
     useEffect(() => {
         init();
     }, [init])
-
     return <div
         style={{
             display: 'flex',
@@ -71,7 +68,7 @@ export function RenderEngine({ jsonlist, page, scaleNum = 1, bgscaleNum = 1 }) {
                 }}
                 alt=''
             />
-            {list.pages ? list.pages[currentPageIndex].components.map((item, index) => {
+            {list.pages && list.pages[currentPageIndex].components ? list.pages[currentPageIndex].components.map((item, index) => {
                 return componentsRender(item, index)
             }) : null}
         </div>

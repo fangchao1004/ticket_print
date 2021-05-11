@@ -14,7 +14,7 @@ export function RenderEngine({ jsonlist, page, scaleNum = 1, bgscaleNum = 1 }) {
         if (!item) { return null }
         switch (item.type) {
             case 'input':
-                return <input key={index} {...item.attribute} />
+                return <input key={index} {...item.attribute} style={{ ...item.attribute.style, borderStyle: 'none' }} />
             case 'textarea':
                 return <textarea key={index} {...item.attribute} />
             case 'daterange':

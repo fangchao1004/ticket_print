@@ -19,6 +19,14 @@ const HttpApi = {
             return result.data.data[0]
         }
         return null
+    },
+    getJBTApplyRecord: async ({ id }) => {
+        let sql = `select * from job_tickets_apply_records where job_t_r_id = ${id}`
+        let result = await HttpApi.obs({ sql })
+        if (result.data.code === 0) {
+            return result.data.data[0]
+        }
+        return null
     }
 }
 export default HttpApi

@@ -2,6 +2,26 @@ import React, { useCallback, useEffect, useState } from 'react'
 import HttpApi from '../http/HttpApi'
 import { RenderEngine } from '../tools/RenderEngine'
 
+/***
+1，主票和包含的附页情况
+[
+    [{主page1},{主page2}],/// 主票页A3【数量2】
+    [{附页page1}],/// 附页都是A4【数量X】
+    [{附页page2}],
+    [{附页page3}],
+]
+2，措施票和包含的检查卡情况
+[
+    [{措施page1},{措施page2}],/// 措施票页A4【数量1～2】
+    [{检查卡page1}],/// 检查卡A4【数量X】
+    [{检查卡page2}],
+    [{检查卡page3}],
+]
+ * 
+ * 
+ * 
+ */
+
 var userList = []
 let allPages = []
 const scale_value = 0.94
@@ -22,13 +42,19 @@ export default function TestPageNew() {
     return pagelist
   }, [])
   const init = useCallback(async (id, print_num, print_card) => {
-    console.log('init参数 id, print_num, print_card:', id, print_num, print_card)
+    // console.log('init参数 id, print_num, print_card:', id, print_num, print_card)
     print_num = parseInt(print_num)
     let user_list = await HttpApi.getAllUserlist()
     if (user_list.length > 0) {
       userList = user_list
     }
     let res = await HttpApi.getJBTRecord({ id })
+    let res2 = await HttpApi.getJBTApplyRecord({ id })
+    let is_sub = 0;///是否为措施票
+    if (res2) {
+      is_sub = res2.is_sub
+    }
+    // console.log('is_sub:', is_sub)
     if (res) {
       res.pages = JSON.parse(res.pages)
       res.pages = removeAllDisabled(res.pages)
@@ -51,14 +77,14 @@ export default function TestPageNew() {
       })
       mainPages.push(mainPage)
       allPages = mainPages.concat(extraPages)
-      if (String(print_card) === 'true' && res.checkcard && res.checkcard.length > 0) { ///是否打印检查卡
+      if (String(print_card) === 'true' && res.checkcard && res.checkcard.length > 0 && is_sub) { ///措施票 是否打印检查卡
         res.checkcard.forEach((item_card) => {
-          item_card.index = item_card.index
           allPages.push([item_card])
         })
       }
       // return;
       if (window.electron) {
+        ///后续监听
         window.electron.ipcRenderer.on('message', (_, arg) => {
           if (arg === 'printSuccess') {
             if (allPages.length > 0) {
@@ -66,16 +92,17 @@ export default function TestPageNew() {
               newTicketValue.pages = allPages.shift()
               setTicketValue(newTicketValue)
               setTimeout(() => {
+                ///默认A4竖版
                 let message = {
                   content: 'print',
                   landscape: false,
                   copies: print_num || newTicketValue.print_num,
                   pageSize: 'A4'
                 }
-                if (newTicketValue.pages.length > 1) {
+                if (newTicketValue.pages.length > 1 && is_sub === 0) {///主票 pages.length>1 主票的extra都是单一元素的数组。所以不会到这里
                   message.landscape = true
                   message.copies = print_num || newTicketValue.print_num
-                  message.pageSize = 'A4'
+                  message.pageSize = 'A3'
                 }
                 if (window.electron) window.electron.ipcRenderer.send('message', message)
               }, 1500)
@@ -87,21 +114,22 @@ export default function TestPageNew() {
           }
         })
       }
-
+      ///第一次执行
       let ticketValue = { ...res }
       ticketValue.pages = allPages.shift()
       setTicketValue(ticketValue)
       setTimeout(() => {
+        ///默认A4竖版
         let message = {
           content: 'print',
           landscape: false,
           copies: print_num || ticketValue.print_num,
           pageSize: 'A4'
         }
-        if (ticketValue.pages.length > 1) {
+        if (ticketValue.pages.length > 1 && is_sub === 0) {///如果当前记录是主票 那么就要判断pages.length>1 主票的extra都是单一元素的数组。所以不会到这里
           message.landscape = true
           message.copies = print_num || ticketValue.print_num
-          message.pageSize = 'A4'
+          message.pageSize = 'A3'
         }
         if (window.electron) window.electron.ipcRenderer.send('message', message)
       }, 1500)

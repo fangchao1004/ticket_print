@@ -170,6 +170,7 @@ export default function TestPageNew() {
       if (param[0] === 'print_card') print_card = param[1]
     }
     if (id) init(id, print_num, print_card)///获取壳发来的参数
+    // init(36, 1, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return <div style={{ ...styles.root, marginTop: ticketValue.scal ? 0 : -40 }}>{getRenderViewByList()}</div>

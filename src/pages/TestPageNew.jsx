@@ -42,7 +42,7 @@ export default function TestPageNew() {
     return pagelist
   }, [])
   const init = useCallback(async (id, print_num, print_card) => {
-    // console.log('init参数 id, print_num, print_card:', id, print_num, print_card)
+    console.log('init参数 id, print_num, print_card:', { id, print_num, print_card })
     print_num = parseInt(print_num)
     let user_list = await HttpApi.getAllUserlist()
     if (user_list.length > 0) {
@@ -86,7 +86,7 @@ export default function TestPageNew() {
       if (window.electron) {
         ///后续监听
         window.electron.ipcRenderer.on('message', (_, arg) => {
-          if (arg === 'printSuccess') {
+          if (arg === 'printSuccess') { ///接受到壳发来的printSuccess 说明上一个打印成功 接着打印下一个
             if (allPages.length > 0) {
               let newTicketValue = { ...res }
               newTicketValue.pages = allPages.shift()
@@ -104,6 +104,7 @@ export default function TestPageNew() {
                   message.copies = print_num || newTicketValue.print_num
                   message.pageSize = 'A3'
                 }
+                console.log('后续打印返回给壳的message:', message)
                 if (window.electron) window.electron.ipcRenderer.send('message', message)
               }, 1500)
             } else {
@@ -114,7 +115,7 @@ export default function TestPageNew() {
           }
         })
       }
-      ///第一次执行
+      ///第一次执行 壳请求print项目部署的地址。带参数
       let ticketValue = { ...res }
       ticketValue.pages = allPages.shift()
       setTicketValue(ticketValue)
@@ -131,7 +132,8 @@ export default function TestPageNew() {
           message.copies = print_num || ticketValue.print_num
           message.pageSize = 'A3'
         }
-        if (window.electron) window.electron.ipcRenderer.send('message', message)
+        console.log('首次打印返回给壳的message:', message) ///{content: "print", landscape: true, copies: 1, pageSize: "A3"}
+        if (window.electron) window.electron.ipcRenderer.send('message', message) ///打印成功再向壳返还发送 message
       }, 1500)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -170,7 +172,7 @@ export default function TestPageNew() {
       if (param[0] === 'print_card') print_card = param[1]
     }
     if (id) init(id, print_num, print_card)///获取壳发来的参数
-    // init(36, 1, false)
+    // init(24, 1, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   return <div style={{ ...styles.root, marginTop: ticketValue.scal ? 0 : -40 }}>{getRenderViewByList()}</div>

@@ -23,10 +23,11 @@ import { RenderEngine } from '../tools/RenderEngine'
  */
 
 var userList = []
-let allPages = []
 const scale_value = 0.94
+const scale_value2 = 0.75
 export default function TestPageNew() {
   const [ticketValue, setTicketValue] = useState({})
+  const [isA3, setIsA3] = useState(false)///是否A3样式 横版排布
 
   const removeAllDisabled = useCallback(pagelist => {
     // console.log('移除所有disable');
@@ -41,20 +42,14 @@ export default function TestPageNew() {
     })
     return pagelist
   }, [])
-  const init = useCallback(async (id, print_num, print_card) => {
-    console.log('init参数 id, print_num, print_card:', { id, print_num, print_card })
-    print_num = parseInt(print_num)
+  const init = useCallback(async ({ id, is_extra, is_checkcard }) => {
+    // console.log('init参数  id, is_a3 :', { id, is_sub, is_extra })
     let user_list = await HttpApi.getAllUserlist()
     if (user_list.length > 0) {
       userList = user_list
     }
     let res = await HttpApi.getJBTRecord({ id })
-    let res2 = await HttpApi.getJBTApplyRecord({ id })
-    let is_sub = 0;///是否为措施票
-    if (res2) {
-      is_sub = res2.is_sub
-    }
-    // console.log('is_sub:', is_sub)
+    // let res2 = await HttpApi.getJBTApplyRecord({ id })
     if (res) {
       res.pages = JSON.parse(res.pages)
       res.pages = removeAllDisabled(res.pages)
@@ -65,76 +60,28 @@ export default function TestPageNew() {
           console.log('检查卡json格式有问题')
         }
       }
-      let mainPages = []
       let mainPage = []
       let extraPages = []
       res.pages.forEach(page => {
         if (page.is_extra) {
-          extraPages.push([page])
+          extraPages.push(page)
         } else {
           mainPage.push(page)
         }
       })
-      mainPages.push(mainPage)
-      allPages = mainPages.concat(extraPages)
-      if (String(print_card) === 'true' && res.checkcard && res.checkcard.length > 0 && is_sub) { ///措施票 是否打印检查卡
-        res.checkcard.forEach((item_card) => {
-          allPages.push([item_card])
-        })
-      }
-      // return;
-      if (window.electron) {
-        ///后续监听
-        window.electron.ipcRenderer.on('message', (_, arg) => {
-          if (arg === 'printSuccess') { ///接受到壳发来的printSuccess 说明上一个打印成功 接着打印下一个
-            if (allPages.length > 0) {
-              let newTicketValue = { ...res }
-              newTicketValue.pages = allPages.shift()
-              setTicketValue(newTicketValue)
-              setTimeout(() => {
-                ///默认A4竖版
-                let message = {
-                  content: 'print',
-                  landscape: false,
-                  copies: print_num || newTicketValue.print_num,
-                  pageSize: 'A4'
-                }
-                if (newTicketValue.pages.length > 1 && is_sub === 0) {///主票 pages.length>1 主票的extra都是单一元素的数组。所以不会到这里
-                  message.landscape = true
-                  message.copies = print_num || newTicketValue.print_num
-                  message.pageSize = 'A3'
-                }
-                console.log('后续打印返回给壳的message:', message)
-                if (window.electron) window.electron.ipcRenderer.send('message', message)
-              }, 1500)
-            } else {
-              setTimeout(() => {
-                if (window.electron) window.electron.ipcRenderer.send('message', { content: 'printEnd' })
-              }, 1500)
-            }
-          }
-        })
-      }
-      ///第一次执行 壳请求print项目部署的地址。带参数
+      // console.log('mainPage:', mainPage)
+      // console.log('extraPages:', extraPages);
       let ticketValue = { ...res }
-      ticketValue.pages = allPages.shift()
+      if (is_extra) {
+        ticketValue.pages = extraPages
+      } else if (is_checkcard) {
+        ticketValue.pages = res.checkcard
+      } else {
+        ticketValue.pages = mainPage
+      }
+      console.log('ticketValue:', ticketValue)
+      // console.log('ticketValue:', ticketValue);
       setTicketValue(ticketValue)
-      setTimeout(() => {
-        ///默认A4竖版
-        let message = {
-          content: 'print',
-          landscape: false,
-          copies: print_num || ticketValue.print_num,
-          pageSize: 'A4'
-        }
-        if (ticketValue.pages.length > 1 && is_sub === 0) {///如果当前记录是主票 那么就要判断pages.length>1 主票的extra都是单一元素的数组。所以不会到这里
-          message.landscape = true
-          message.copies = print_num || ticketValue.print_num
-          message.pageSize = 'A3'
-        }
-        console.log('首次打印返回给壳的message:', message) ///{content: "print", landscape: true, copies: 1, pageSize: "A3"}
-        if (window.electron) window.electron.ipcRenderer.send('message', message) ///打印成功再向壳返还发送 message
-      }, 1500)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -145,11 +92,12 @@ export default function TestPageNew() {
       if (ticketValue.scal) {
         scalObj = JSON.parse(ticketValue.scal)
       }
-      // console.log('scalObj:', scalObj);
+      // console.log('缩放属性:', scalObj);
       return ticketValue.pages.map((_, index) => {
+        // console.log('840 * scale_value:', 840 * scale_value)
         return (
-          <div style={ticketValue.scal ? {} : { width: 840 * scale_value, height: 1188 * scale_value }}>
-            <div style={{ transform: `scale(${scale_value})` }}>
+          <div style={{ width: 840 * scale_value, height: 1188 * scale_value }}>
+            <div style={{ transform: `scale(${ticketValue.scal ? scale_value2 : scale_value})` }}>
               <RenderEngine jsonlist={ticketValue} page={index} scaleNum={scalObj.scaleNum || 1} bgscaleNum={scalObj.bgscaleNum || 1} />
             </div>
           </div>
@@ -159,23 +107,33 @@ export default function TestPageNew() {
   }, [ticketValue])
 
   useEffect(() => {
-    console.log('useEffect')
     const query = window.location.search.substring(1)
     const params = query.split('&')
     let id = null
-    let print_num = 1;
-    let print_card = true;
+    let is_sub = 0; ///是否为措施票
+    let is_extra = 0; ///是否为附页
+    let is_checkcard = 0; ///是否为检查卡
     for (var i = 0; i < params.length; i++) {
       const param = params[i].split('=')
-      if (param[0] === 'id') id = param[1]
-      if (param[0] === 'print_num') print_num = param[1]
-      if (param[0] === 'print_card') print_card = param[1]
+      // console.log('param:', param);
+      if (param[0] === 'id') id = parseInt(param[1])
+      if (param[0] === 'is_sub') is_sub = parseInt(param[1])
+      if (param[0] === 'is_extra') is_extra = parseInt(param[1])
+      if (param[0] === 'is_checkcard') is_checkcard = parseInt(param[1])
     }
-    if (id) init(id, print_num, print_card)///获取壳发来的参数
-    // init(24, 1, false)
+    let is_a3 = false;
+    if (!is_sub && !is_extra) { is_a3 = true }
+    // console.log('is_a3:', is_a3);
+    setIsA3(is_a3)
+    if (id) init({ id, is_sub, is_extra, is_checkcard })///获取壳发来的参数
+    setTimeout(() => {
+      window.print()
+    }, 2500);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  return <div style={{ ...styles.root, marginTop: ticketValue.scal ? 0 : -40 }}>{getRenderViewByList()}</div>
+  return <div style={{ ...styles.root, flexDirection: isA3 ? 'row' : 'column', marginTop: ticketValue.scal ? -190 : -40, }}>
+    {getRenderViewByList()}
+  </div>
 }
 
 const styles = {

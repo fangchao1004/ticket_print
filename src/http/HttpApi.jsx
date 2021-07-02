@@ -1,6 +1,6 @@
 import axois from 'axios'
-// const Testuri = 'http://ixiaomu.cn:3010/'
-const Testuri = 'http://60.174.196.158:3008/'
+const Testuri = 'http://ixiaomu.cn:3010/'
+// const Testuri = 'http://60.174.196.158:3008/'
 const HttpApi = {
     obs: (params) => {
         return axois.post(Testuri + 'obs', params)

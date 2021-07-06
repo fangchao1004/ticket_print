@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Checkbox } from 'antd';
+import { Checkbox, Radio } from 'antd';
 import moment from 'moment'
 const testuri = 'http://60.174.196.158:12345/'///图片地址--暂时放60服务器
 /**
@@ -16,7 +16,7 @@ export function RenderEngine({ jsonlist, page, scaleNum = 1, bgscaleNum = 1 }) {
             case 'input':
                 return <input key={index} {...item.attribute} style={{ ...item.attribute.style, borderStyle: 'none' }} />
             case 'textarea':
-                return <textarea key={index} {...item.attribute} />
+                return <textarea key={index} {...item.attribute} style={{ ...item.attribute.style, height: item.attribute.style.height + 10, borderStyle: 'none' }} />
             case 'daterange':
             case 'daterange1':
                 if (!item.attribute.value) return null
@@ -33,6 +33,8 @@ export function RenderEngine({ jsonlist, page, scaleNum = 1, bgscaleNum = 1 }) {
                 />
             case 'checkboxgroup':
                 return <Checkbox.Group key={index} {...item.attribute} />
+            case 'radiogroup':
+                return <Radio.Group key={index} {...item.attribute} />
             case 'select':
                 return <input key={index} {...item.attribute} style={{ ...item.attribute.style, height: 20, top: item.attribute.style.top + 4, borderStyle: 'none' }} />
             default:

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import HttpApi from '../http/HttpApi'
 import { RenderEngine } from '../tools/RenderEngine'
+import { replaceSpecialChar2NChar } from '../tools/Tool'
 
 /***
 1，主票和包含的附页情况
@@ -53,6 +54,7 @@ export default function TestPageNew() {
     if (res) {
       res.pages = JSON.parse(res.pages)
       res.pages = removeAllDisabled(res.pages)
+      res.pages = replaceSpecialChar2NChar(res.pages)
       if (res.checkcard) {
         try {
           res.checkcard = JSON.parse(res.checkcard)
@@ -79,7 +81,7 @@ export default function TestPageNew() {
       } else {
         ticketValue.pages = mainPage
       }
-      console.log('ticketValue:', ticketValue)
+      // console.log('ticketValue:', ticketValue)
       // console.log('ticketValue:', ticketValue);
       setTicketValue(ticketValue)
     }
